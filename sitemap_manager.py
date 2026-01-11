@@ -18,6 +18,7 @@ logger = logging.getLogger(__name__)
 
 SITEMAP_DIR = Path("sitemaps")
 SITEMAP_INDEX_URL = "https://hymnary.org/sitemap.xml"
+HYMN_SITEMAP_FILTER = "text"  # Filter for sitemaps containing hymn texts
 
 
 class SitemapManager:
@@ -173,7 +174,7 @@ class SitemapManager:
         all_hymns = []
         for xml_file in extracted_files:
             # Focus on text sitemaps which contain hymn texts
-            if 'text' in xml_file.name.lower():
+            if HYMN_SITEMAP_FILTER in xml_file.name.lower():
                 hymns = self.parse_sitemap_file(xml_file)
                 all_hymns.extend(hymns)
                 logger.info(f"Loaded {len(hymns)} hymns from {xml_file.name}")

@@ -6,6 +6,7 @@ A Discord bot that helps users find hymns from hymnary.org using the /find comma
 
 import os
 import logging
+import asyncio
 import discord
 from discord import app_commands
 from discord.ui import Select, View, Button
@@ -35,8 +36,9 @@ intents.message_content = True
 client = discord.Client(intents=intents)
 tree = app_commands.CommandTree(client)
 
-# Global sitemap manager
+# Global sitemap manager with thread-safe initialization
 sitemap_manager: Optional[SitemapManager] = None
+sitemap_manager_lock = asyncio.Lock()
 
 
 class HymnSelectView(View):
@@ -172,18 +174,20 @@ async def on_ready():
     
     logger.info(f'Logged in as {client.user} (ID: {client.user.id})')
     
-    # Initialize sitemap manager
-    logger.info("Initializing sitemap manager...")
-    sitemap_manager = initialize_sitemaps()
-    
-    # Load hymn data in the background
-    logger.info("Loading hymn data...")
-    try:
-        hymn_count = len(sitemap_manager.load_all_hymns())
-        logger.info(f"Loaded {hymn_count} hymns")
-    except Exception as e:
-        logger.error(f"Error loading hymns: {e}", exc_info=True)
-        logger.warning("Bot will continue but /find may not work properly")
+    # Initialize sitemap manager with thread-safe lock
+    async with sitemap_manager_lock:
+        if sitemap_manager is None:
+            logger.info("Initializing sitemap manager...")
+            sitemap_manager = initialize_sitemaps()
+            
+            # Load hymn data in the background
+            logger.info("Loading hymn data...")
+            try:
+                hymn_count = len(sitemap_manager.load_all_hymns())
+                logger.info(f"Loaded {hymn_count} hymns")
+            except Exception as e:
+                logger.error(f"Error loading hymns: {e}", exc_info=True)
+                logger.warning("Bot will continue but /find may not work properly")
     
     # Sync commands
     try:
