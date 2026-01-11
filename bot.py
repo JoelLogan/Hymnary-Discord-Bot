@@ -87,13 +87,16 @@ class HymnSelectView(View):
         embed = discord.Embed(
             title=selected_hymn['title'],
             url=selected_hymn['url'],
-            description=f"🎵 [View on Hymnary]({selected_hymn['url']})",
+            description=f"[View on Hymnary]({selected_hymn['url']})",
             color=discord.Color.blue()
         )
         embed.set_footer(text=f"Shared by {interaction.user.display_name}")
         
-        # Send to the channel
-        await interaction.response.send_message(embed=embed)
+        # Acknowledge the interaction first to avoid timeout
+        await interaction.response.defer()
+        
+        # Send to the channel as a standalone message (not a reply)
+        await interaction.channel.send(embed=embed)
         
         # Update the ephemeral message to confirm
         await self.original_interaction.edit_original_response(
@@ -145,7 +148,7 @@ async def find_hymn(interaction: discord.Interaction, song_title: str):
         
         # Create embed with search results
         embed = discord.Embed(
-            title=f"🔍 Found {len(results)} result{'s' if len(results) != 1 else ''}",
+            title=f"Found {len(results)} result{'s' if len(results) != 1 else ''}",
             description=f"Searching for: **{song_title}**\n\nSelect a hymn below to share it with the channel.",
             color=discord.Color.green()
         )
