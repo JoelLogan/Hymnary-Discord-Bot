@@ -92,11 +92,11 @@ class HymnSelectView(View):
         )
         embed.set_footer(text=f"Shared by {interaction.user.display_name}")
         
+        # Acknowledge the interaction first to avoid timeout
+        await interaction.response.defer()
+        
         # Send to the channel as a standalone message (not a reply)
         await interaction.channel.send(embed=embed)
-        
-        # Acknowledge the interaction
-        await interaction.response.defer()
         
         # Update the ephemeral message to confirm
         await self.original_interaction.edit_original_response(
